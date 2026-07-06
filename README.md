@@ -11,8 +11,11 @@ CRM sync — see the roadmap below.
 ## What it does
 
 1. **Ingest** — paste any YouTube / TikTok / Instagram / X / SoundCloud link, upload
-   an audio or video file, or connect your YouTube account so your **Liked videos**
-   (and an optional dedicated playlist) import automatically.
+   an audio or video file, **record a voice note in the browser**, connect your
+   YouTube account so your **Liked videos** (and an optional dedicated playlist)
+   import automatically, or **share straight from your phone's share sheet** (install
+   as a PWA — a link or a video/audio file shared from YouTube/TikTok/etc. lands in
+   Recall with no copy-paste).
 2. **Transcribe** — audio is extracted with `yt-dlp` and transcribed with
    speaker labels (AssemblyAI; a `mock` provider lets you run everything with zero
    API keys).
@@ -73,10 +76,10 @@ For real output set:
 
 ## Roadmap
 
-| Phase | Feature | Notes |
+| Phase | Feature | Status |
 |---|---|---|
-| 1 (this) | Save-to-transcribe library | URL paste, YouTube sync, upload, search, channels |
-| 2 | Voice notes | Quick-capture UI + mobile share sheet; pipeline already supports uploads |
+| 1 | Save-to-transcribe library | ✅ URL paste, YouTube sync, upload, FTS search, channels |
+| 2 | Voice notes + mobile share sheet | ✅ In-browser recorder + PWA `share_target` |
 | 3 | Live meetings | Granola-style local audio capture (no bot in the call) + calendar context |
 | 4 | Phone calls | Consent-first design only — visible/durable disclosure on every call; see below |
 | 5 | CRM sync | Meeting-pipeline notes → Salesforce/HubSpot/Pipedrive |
