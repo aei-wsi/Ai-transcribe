@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AutoRefresh from "@/components/AutoRefresh";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import { listChannels, pendingCount, searchNotes } from "@/lib/notes";
 import { getConnector, isConfigured } from "@/lib/youtube";
 import type { Note } from "@/lib/types";
@@ -50,9 +51,10 @@ export default async function Home({
         <form action={uploadAudio} className="row" style={{ marginTop: "0.6rem" }}>
           <input type="file" name="file" accept="audio/*,video/*" />
           <button type="submit" className="secondary">
-            Upload audio / voice note
+            Upload audio / video
           </button>
         </form>
+        <VoiceRecorder />
         <div className="row" style={{ marginTop: "0.6rem" }}>
           {isConfigured() ? (
             youtube ? (

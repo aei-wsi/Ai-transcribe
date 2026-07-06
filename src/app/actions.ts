@@ -2,11 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import fs from "node:fs";
-import path from "node:path";
-import { MEDIA_DIR, getDb } from "@/lib/db";
 import { detectPlatform } from "@/lib/ingest";
 import { createNote } from "@/lib/notes";
+import { saveUpload } from "@/lib/uploads";
 import { syncYouTube } from "@/lib/youtube";
 
 export async function addUrl(formData: FormData): Promise<void> {
@@ -21,24 +19,19 @@ export async function addUrl(formData: FormData): Promise<void> {
   revalidatePath("/");
 }
 
-const AUDIO_EXTENSIONS = new Set([
-  ".mp3", ".m4a", ".wav", ".aac", ".ogg", ".flac", ".webm", ".mp4", ".mov",
-]);
-
 export async function uploadAudio(formData: FormData): Promise<void> {
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return;
-  const ext = path.extname(file.name).toLowerCase() || ".mp3";
-  if (!AUDIO_EXTENSIONS.has(ext)) return;
+  if (!(file instanceof File)) return;
+  await saveUpload(file, { platform: "upload" });
+  revalidatePath("/");
+}
 
-  getDb(); // ensure data dirs exist
-  const noteId = createNote({
-    title: path.basename(file.name, ext),
-    platform: "upload",
-  });
-  const mediaPath = path.join(MEDIA_DIR, `note-${noteId}${ext}`);
-  fs.writeFileSync(mediaPath, Buffer.from(await file.arrayBuffer()));
-  getDb().prepare("UPDATE notes SET media_path = ? WHERE id = ?").run(mediaPath, noteId);
+/** Receives a recorded voice note (blob) from the in-browser recorder. */
+export async function recordVoiceNote(formData: FormData): Promise<void> {
+  const file = formData.get("audio");
+  if (!(file instanceof File)) return;
+  const title = String(formData.get("title") ?? "").trim() || undefined;
+  await saveUpload(file, { title, platform: "voice-note" });
   revalidatePath("/");
 }
 
