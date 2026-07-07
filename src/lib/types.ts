@@ -19,6 +19,14 @@ export interface KeyQuote {
   atSec: number | null;
 }
 
+export interface ActionItem {
+  task: string;
+  owner: string | null;
+}
+
+/** What kind of capture a note is — drives meeting-vs-research enrichment. */
+export type NoteKind = "media" | "meeting";
+
 export interface Note {
   id: number;
   title: string;
@@ -37,6 +45,8 @@ export interface Note {
   key_points_json: string | null;
   key_quotes_json: string | null;
   tags_json: string | null;
+  action_items_json: string | null;
+  decisions_json: string | null;
   created_at: string;
   updated_at: string;
 }

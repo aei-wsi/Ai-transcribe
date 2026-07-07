@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AutoRefresh from "@/components/AutoRefresh";
+import MeetingRecorder from "@/components/MeetingRecorder";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import { listChannels, pendingCount, searchNotes } from "@/lib/notes";
 import { getConnector, isConfigured } from "@/lib/youtube";
@@ -79,6 +80,18 @@ export default async function Home({
           )}
         </div>
       </div>
+
+      <details className="card">
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+          Record a meeting (local capture — no bot joins the call)
+        </summary>
+        <p className="meta" style={{ marginTop: "0.5rem" }}>
+          Captures the meeting tab&apos;s audio and your mic on this device. Nothing
+          joins the call as a participant. You confirm you&apos;ve disclosed recording
+          to attendees before it starts.
+        </p>
+        <MeetingRecorder />
+      </details>
 
       <form action={search} className="row" style={{ margin: "1.25rem 0" }}>
         <input

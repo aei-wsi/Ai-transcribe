@@ -38,12 +38,14 @@ export async function processNote(noteId: number): Promise<void> {
   setNoteStatus(noteId, "enriching");
   note = getNote(noteId)!;
   const channels = listChannels();
+  const kind = note.platform === "meeting" ? "meeting" : "media";
   const enrichment = await enrich({
     title: note.title,
     author: note.author,
     transcript: transcript.text,
     segments: transcript.segments,
     channels,
+    kind,
   });
   const channel = channels.find((c) => c.name === enrichment.channelName);
   updateNote(noteId, {
@@ -51,6 +53,8 @@ export async function processNote(noteId: number): Promise<void> {
     key_points_json: JSON.stringify(enrichment.keyPoints),
     key_quotes_json: JSON.stringify(enrichment.keyQuotes),
     tags_json: JSON.stringify(enrichment.tags),
+    action_items_json: JSON.stringify(enrichment.actionItems),
+    decisions_json: JSON.stringify(enrichment.decisions),
     channel_id: channel?.id ?? null,
     status: "ready",
     error: null,

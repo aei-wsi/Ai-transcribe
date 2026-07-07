@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Channel, KeyQuote, Segment } from "./types";
+import type { ActionItem, Channel, KeyQuote, NoteKind, Segment } from "./types";
 
 export interface Enrichment {
   summary: string;
@@ -7,6 +7,8 @@ export interface Enrichment {
   keyQuotes: KeyQuote[];
   tags: string[];
   channelName: string | null;
+  actionItems: ActionItem[];
+  decisions: string[];
 }
 
 const MAX_TRANSCRIPT_CHARS = 400_000;
@@ -74,17 +76,62 @@ const ENRICHMENT_SCHEMA = {
   additionalProperties: false,
 } as const;
 
+const MEETING_SCHEMA = {
+  type: "object",
+  properties: {
+    summary: {
+      type: "string",
+      description: "2-4 sentence recap of what the meeting covered and concluded.",
+    },
+    key_points: {
+      type: "array",
+      items: { type: "string" },
+      description: "3-8 bullet points of the main discussion topics.",
+    },
+    decisions: {
+      type: "array",
+      items: { type: "string" },
+      description: "Concrete decisions the group reached. Empty array if none.",
+    },
+    action_items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          task: { type: "string", description: "What needs to be done." },
+          owner: {
+            type: ["string", "null"],
+            description: "Who owns it (speaker label or name), or null if unassigned.",
+          },
+        },
+        required: ["task", "owner"],
+        additionalProperties: false,
+      },
+      description: "Follow-up tasks. Empty array if none.",
+    },
+    tags: {
+      type: "array",
+      items: { type: "string" },
+      description: "3-8 short lowercase topic tags.",
+    },
+  },
+  required: ["summary", "key_points", "decisions", "action_items", "tags"],
+  additionalProperties: false,
+} as const;
+
 export async function enrich(params: {
   title: string;
   author: string | null;
   transcript: string;
   segments: Segment[];
   channels: Channel[];
+  kind?: NoteKind;
 }): Promise<Enrichment> {
   if (!process.env.ANTHROPIC_API_KEY) return heuristicEnrichment(params.transcript);
 
   const client = new Anthropic();
   const model = process.env.ANTHROPIC_MODEL || "claude-opus-4-8";
+  const isMeeting = params.kind === "meeting";
 
   const channelList = params.channels
     .map((c) => `- "${c.name}": ${c.description}`)
@@ -95,7 +142,14 @@ export async function enrich(params: {
       ? timestamped.slice(0, MAX_TRANSCRIPT_CHARS) + "\n[transcript truncated]"
       : timestamped;
 
-  const prompt = `You are the enrichment step of a personal knowledge library. The user saves videos and audio to study later (sermon prep, agency/marketing research, etc.). Produce reference notes for this transcript.
+  const prompt = isMeeting
+    ? `You are the note-taker for a meeting. Produce clear, actionable meeting notes from this transcript. Extract concrete decisions and follow-up action items with owners where stated.
+
+Title: ${params.title}
+
+Transcript (lines are prefixed with [timestamps] and speaker labels):
+${clipped}`
+    : `You are the enrichment step of a personal knowledge library. The user saves videos and audio to study later (sermon prep, agency/marketing research, etc.). Produce reference notes for this transcript.
 
 Title: ${params.title}
 Author: ${params.author ?? "unknown"}
@@ -110,7 +164,7 @@ ${clipped}`;
     model,
     max_tokens: 4096,
     output_config: {
-      format: { type: "json_schema", schema: ENRICHMENT_SCHEMA },
+      format: { type: "json_schema", schema: isMeeting ? MEETING_SCHEMA : ENRICHMENT_SCHEMA },
     },
     messages: [{ role: "user", content: prompt }],
   });
@@ -119,6 +173,25 @@ ${clipped}`;
 
   const text = response.content.find((b) => b.type === "text")?.text;
   if (!text) return heuristicEnrichment(params.transcript);
+
+  if (isMeeting) {
+    const parsed = JSON.parse(text) as {
+      summary: string;
+      key_points: string[];
+      decisions: string[];
+      action_items: { task: string; owner: string | null }[];
+      tags: string[];
+    };
+    return {
+      summary: parsed.summary,
+      keyPoints: parsed.key_points,
+      keyQuotes: [],
+      tags: parsed.tags,
+      channelName: null,
+      decisions: parsed.decisions,
+      actionItems: parsed.action_items,
+    };
+  }
 
   const parsed = JSON.parse(text) as {
     summary: string;
@@ -134,6 +207,8 @@ ${clipped}`;
     keyQuotes: parsed.key_quotes.map((q) => ({ quote: q.quote, atSec: q.at_sec })),
     tags: parsed.tags,
     channelName: parsed.channel,
+    decisions: [],
+    actionItems: [],
   };
 }
 
@@ -149,5 +224,7 @@ function heuristicEnrichment(transcript: string): Enrichment {
     keyQuotes: [],
     tags: [],
     channelName: null,
+    decisions: [],
+    actionItems: [],
   };
 }

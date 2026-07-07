@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS notes (
   key_points_json TEXT,
   key_quotes_json TEXT,
   tags_json TEXT,
+  action_items_json TEXT,
+  decisions_json TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -77,6 +79,20 @@ CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
 );
 `;
 
+/** Adds columns introduced after the first release to pre-existing databases. */
+function migrate(db: Database.Database) {
+  const cols = new Set(
+    (db.prepare("PRAGMA table_info(notes)").all() as { name: string }[]).map((c) => c.name)
+  );
+  const add: Record<string, string> = {
+    action_items_json: "TEXT",
+    decisions_json: "TEXT",
+  };
+  for (const [name, type] of Object.entries(add)) {
+    if (!cols.has(name)) db.exec(`ALTER TABLE notes ADD COLUMN ${name} ${type}`);
+  }
+}
+
 function seed(db: Database.Database) {
   const count = db.prepare("SELECT COUNT(*) AS c FROM channels").get() as { c: number };
   if (count.c === 0) {
@@ -98,6 +114,7 @@ export function getDb(): Database.Database {
   const db = new Database(path.join(DATA_DIR, "app.db"));
   db.pragma("journal_mode = WAL");
   db.exec(SCHEMA);
+  migrate(db);
   try {
     db.exec(FTS_SCHEMA);
     _ftsAvailable = true;

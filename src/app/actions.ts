@@ -35,6 +35,15 @@ export async function recordVoiceNote(formData: FormData): Promise<void> {
   revalidatePath("/");
 }
 
+/** Receives a locally-captured meeting recording; enriched as a meeting. */
+export async function recordMeeting(formData: FormData): Promise<void> {
+  const file = formData.get("audio");
+  if (!(file instanceof File)) return;
+  const title = String(formData.get("title") ?? "").trim() || undefined;
+  await saveUpload(file, { title, platform: "meeting" });
+  revalidatePath("/");
+}
+
 export async function syncYouTubeAction(): Promise<void> {
   await syncYouTube();
   revalidatePath("/");

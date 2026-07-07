@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import AutoRefresh from "@/components/AutoRefresh";
 import { transcriptWithTimestamps } from "@/lib/enrich";
 import { getNote, listChannels } from "@/lib/notes";
-import type { KeyQuote, Segment } from "@/lib/types";
+import type { ActionItem, KeyQuote, Segment } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +45,12 @@ export default async function NotePage({
     : [];
   const quotes = note.key_quotes_json
     ? (JSON.parse(note.key_quotes_json) as KeyQuote[])
+    : [];
+  const decisions = note.decisions_json
+    ? (JSON.parse(note.decisions_json) as string[])
+    : [];
+  const actionItems = note.action_items_json
+    ? (JSON.parse(note.action_items_json) as ActionItem[])
     : [];
   const segments = note.segments_json
     ? (JSON.parse(note.segments_json) as Segment[])
@@ -113,6 +119,31 @@ export default async function NotePage({
           <ul>
             {keyPoints.map((p, i) => (
               <li key={i}>{p}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {decisions.length > 0 && (
+        <>
+          <h2>Decisions</h2>
+          <ul>
+            {decisions.map((d, i) => (
+              <li key={i}>{d}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {actionItems.length > 0 && (
+        <>
+          <h2>Action items</h2>
+          <ul>
+            {actionItems.map((a, i) => (
+              <li key={i}>
+                {a.task}
+                {a.owner && <span className="meta"> — {a.owner}</span>}
+              </li>
             ))}
           </ul>
         </>

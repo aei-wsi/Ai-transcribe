@@ -26,6 +26,11 @@ CRM sync — see the roadmap below.
 4. **Retrieve** — full-text search (SQLite FTS5) across titles, transcripts,
    summaries, and tags, filterable by channel.
 
+**Meetings** get a different treatment: capture a call's audio locally (the browser
+tab's audio + your mic, mixed on-device — **no bot joins the call**), gated behind an
+explicit consent acknowledgement, and enriched into meeting notes with **decisions**
+and **action items** instead of quotes.
+
 ## Architecture
 
 ```
@@ -80,7 +85,7 @@ For real output set:
 |---|---|---|
 | 1 | Save-to-transcribe library | ✅ URL paste, YouTube sync, upload, FTS search, channels |
 | 2 | Voice notes + mobile share sheet | ✅ In-browser recorder + PWA `share_target` |
-| 3 | Live meetings | Granola-style local audio capture (no bot in the call) + calendar context |
+| 3 | Live meetings | ✅ Local tab/system-audio capture (no bot), consent-gated, meeting-shaped notes (decisions + action items). Calendar auto-context still to come. |
 | 4 | Phone calls | Consent-first design only — visible/durable disclosure on every call; see below |
 | 5 | CRM sync | Meeting-pipeline notes → Salesforce/HubSpot/Pipedrive |
 
