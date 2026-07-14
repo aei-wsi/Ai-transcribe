@@ -61,9 +61,25 @@ if have yt-dlp; then info "yt-dlp OK"; else
 fi
 
 # --- 4. pm2 (process manager / boot persistence) ---------------------------
-if have pm2; then info "pm2 OK"; else
+PM2_BIN=pm2
+if have pm2; then
+  info "pm2 OK"
+else
   info "Installing pm2..."
   npm install -g pm2 || $SUDO npm install -g pm2 || die "Could not install pm2. Try: sudo npm install -g pm2"
+  if ! have pm2; then
+    # Common on fresh installs: npm's global bin dir isn't on PATH yet in this
+    # shell. Locate it via the npm prefix and use it directly for this run.
+    NPM_GLOBAL_BIN="$(npm config get prefix 2>/dev/null)/bin"
+    if [ -x "$NPM_GLOBAL_BIN/pm2" ]; then
+      PM2_BIN="$NPM_GLOBAL_BIN/pm2"
+      export PATH="$NPM_GLOBAL_BIN:$PATH"
+      warn "pm2 installed but wasn't on PATH — using $PM2_BIN for this run."
+      warn "Add it permanently: echo 'export PATH=\"$NPM_GLOBAL_BIN:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+    else
+      die "pm2 installed but its binary wasn't found at $NPM_GLOBAL_BIN/pm2. Run 'npm config get prefix' and add <that>/bin to PATH, then re-run."
+    fi
+  fi
 fi
 
 # --- 5. App dependencies + build -------------------------------------------
@@ -84,8 +100,8 @@ if [ "${RECALL_NO_START:-0}" = "1" ]; then
   exit 0
 fi
 info "Starting under pm2..."
-pm2 start ecosystem.config.cjs
-pm2 save
+"$PM2_BIN" start ecosystem.config.cjs
+"$PM2_BIN" save
 PORT_SHOWN="${PORT:-3000}"
 echo
 info "Recall is running → http://localhost:${PORT_SHOWN}  (or http://<this-machine-IP>:${PORT_SHOWN} on your LAN)"
