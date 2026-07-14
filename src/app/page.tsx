@@ -138,8 +138,10 @@ export default async function Home({
             {note.summary && (
               <p style={{ margin: "0.5rem 0 0.25rem" }}>{note.summary}</p>
             )}
-            {note.status === "error" && note.error && (
-              <p className="error-text">{note.error}</p>
+            {note.error && (
+              <p className="error-text">
+                {note.status === "error" ? note.error : `Retrying — ${note.error}`}
+              </p>
             )}
             <div className="row">
               {tags.map((t) => (

@@ -94,9 +94,13 @@ export default async function NotePage({
         ))}
       </div>
 
-      {note.status === "error" && note.error && (
+      {note.error && (
         <div className="card">
-          <p className="error-text">{note.error}</p>
+          <p className="error-text">
+            {note.status === "error"
+              ? note.error
+              : `Retrying after an error — ${note.error}`}
+          </p>
         </div>
       )}
       {processing && (
