@@ -9,6 +9,23 @@ where they differ.
 
 ---
 
+## Quick install (one line)
+
+If Node.js 20+ is already installed, this clones the repo and runs `setup.sh`,
+which installs the rest (ffmpeg, yt-dlp, pm2), builds, and starts it under pm2:
+
+```bash
+git clone <your-repo-url> Ai-transcribe && cd Ai-transcribe && git checkout claude/competitor-ai-transcription-analysis-kj1cho && bash setup.sh
+```
+
+(Drop the `git checkout …` once the branch is merged to `main`.) Already cloned?
+Just run `bash setup.sh` from the project directory. It's safe to re-run, and it
+won't overwrite an existing `.env`. Then add your API keys to `.env` and
+`pm2 restart all`. The manual steps below explain each part if you'd rather do it
+by hand or something needs troubleshooting.
+
+---
+
 ## 1. Prerequisites (install once)
 
 - **Node.js 20+** — https://nodejs.org (Node 22 recommended)
