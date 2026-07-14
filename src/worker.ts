@@ -2,7 +2,14 @@
  * Background worker: processes queued notes (fetch -> transcribe -> enrich).
  * Run alongside the web app:  npm run worker
  */
+import dotenv from "dotenv";
 import { runNextJob } from "./lib/pipeline";
+
+// Next.js auto-loads .env for the web app, but this standalone worker does not —
+// load it here so ASSEMBLYAI_API_KEY / ANTHROPIC_API_KEY / etc. are available.
+// .env.local wins over .env (dotenv keeps the first value it sees for each key).
+dotenv.config({ path: ".env.local", quiet: true });
+dotenv.config({ path: ".env", quiet: true });
 
 const IDLE_POLL_MS = 3000;
 
